@@ -8,10 +8,11 @@ import { Batch, BatchSchema } from './batch.model';
 
 @Module({
     imports: [
+        // enable dependency injections
         EventEmitterModule.forRoot(),
         UtilModule,
         MongooseModule.forFeature([{ name: Batch.name, schema: BatchSchema }]),
-    ], // enable dependency injection for event emitter
+    ],
     controllers: [PizzasController],
     providers: [PizzasService],
 })

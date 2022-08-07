@@ -77,7 +77,7 @@ export class PizzasService {
         this.busyCount[station]++;
         let helpingHands = 0;
 
-        // get a task from the queue
+        // get a task from this stage's queue
         const pizza = this.queues[station].shift();
         console.log(
             `${new Date()} : pizza #${pizza.id.slice(
@@ -99,7 +99,7 @@ export class PizzasService {
             }
             station_time = getToppingsTimeMS(remainingToppings, helpingHands);
         }
-        // schedule timeout for task completion, once it's done, emit event to remove task
+        // schedule timeout for task completion, once it's done, emit `task complete` event
         setTimeout(() => {
             this.busyCount[station] -= helpingHands + 1;
             this.emitTaskComplete(station, pizza);

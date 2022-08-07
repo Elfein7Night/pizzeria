@@ -6,11 +6,3 @@ async function bootstrap() {
     await app.listen(3000);
 }
 bootstrap();
-
-// const orders = [
-//     { "toppings": ["bacon", "tomato"] },
-//     { "toppings": ["bacon", "tomato", "cheese", "onion"] },
-//     { "toppings": ["bacon", "tomato", "cheese", "onion", "mushrooms"] },
-//     { "toppings": ["bacon", "tomato", "cheese", "onion", "mushrooms", "pepperoni"] },
-//     { "toppings": ["bacon", "tomato", "cheese", "onion", "mushrooms", "pepperoni", "sausage"] }
-// ]
