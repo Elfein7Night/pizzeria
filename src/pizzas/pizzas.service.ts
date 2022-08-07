@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Pizza } from './pizza.model';
-import { Batch } from './batch.model';
+import { Batch, BatchDocument } from './batch.model';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { v1 as uuidv1 } from 'uuid';
 import {
@@ -14,6 +14,8 @@ import {
     TIME_FOR_STATION_MS,
 } from './pizzas.constants';
 import { UtilService } from 'src/util/util.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class PizzasService {
@@ -25,11 +27,13 @@ export class PizzasService {
      * Also, events are easier to test and debug.
      * @param eventEmitter EventEmitter2 injected instance of NestJS EventEmitter
      * @param utilService UtilService injected instance of UtilService
+     * @param batchModel Model<BatchDocument> injected instance of BatchModel
      */
     constructor(
         // dependency injections
         private eventEmitter: EventEmitter2,
         private utilService: UtilService,
+        @InjectModel(Batch.name) private batchModel: Model<BatchDocument>,
     ) {}
 
     // *************************************************************
@@ -159,7 +163,17 @@ export class PizzasService {
             console.log(`\t\ttoppings : ${pizza.toppings.join(', ')}\n`);
         });
         console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
-        delete this.batchesInProgress[batchId];
+
+        // save batch ('orders set report') to the database
+        this.batchModel.create(this.batchesInProgress[batchId]).then(
+            () => {
+                console.log(`Batch #${batchId} saved to database`);
+                delete this.batchesInProgress[batchId];
+            },
+            (err) => {
+                console.log(err);
+            },
+        );
     }
 
     // *************************************************************
@@ -183,5 +197,13 @@ export class PizzasService {
             );
             this.emitInQueue(Station.DOUGH);
         });
+    }
+
+    async getAllBatches(): Promise<Batch[]> {
+        return this.batchModel.find().exec();
+    }
+
+    async saveBatch(batch: Batch): Promise<Batch> {
+        return this.batchModel.create(batch);
     }
 }

@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { PizzasService } from './pizzas.service';
 
 @Controller('pizzas')
@@ -9,5 +9,10 @@ export class PizzasController {
     @Post()
     addOrdersBatch(@Body() pizzas: { toppings: string[] }[]) {
         return this.pizzasService.addOrdersBatch(pizzas);
+    }
+
+    @Get('batches')
+    getAllBatches() {
+        return this.pizzasService.getAllBatches();
     }
 }
