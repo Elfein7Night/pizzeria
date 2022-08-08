@@ -54,6 +54,14 @@ export class PizzasService {
 
     private batchesInProgress: { [batchId: string]: Batch } = {};
 
+    // strictly for reporting back to the client, has nothing to do the logic
+    private inStationInfo: { [key in Station]: Set<Pizza> } = {
+        [Station.DOUGH]: new Set<Pizza>(),
+        [Station.TOPPING]: new Set<Pizza>(),
+        [Station.OVEN]: new Set<Pizza>(),
+        [Station.WAITER]: new Set<Pizza>(),
+    };
+
     // *************************************************************
     // ******************* EVENT HANDLING **************************
     // *************************************************************
@@ -117,6 +125,8 @@ export class PizzasService {
             );
         }
 
+        this.inStationInfo[station].add(pizza);
+
         // schedule timeout for task completion, once it's done, emit `task complete` event
         setTimeout(() => {
             this.busyCount[station]--;
@@ -130,6 +140,8 @@ export class PizzasService {
 
     @OnEvent(TASK_COMPLETE)
     onTaskComplete(station: Station, pizza: Pizza) {
+        this.inStationInfo[station].delete(pizza);
+
         console.log(
             `${new Date()} : pizza #${pizza.id} left the ${station} station`,
         );
@@ -204,7 +216,7 @@ export class PizzasService {
 
         const batchId = uuidv1().slice(4, 8);
         this.batchesInProgress[batchId] = new Batch(batchId, orders.length);
-        console.log(`${new Date()} : Batch #${batchId} started`);
+        console.log(`${new Date()} : Batch #${batchId} started...`);
 
         orders.forEach((order) => {
             this.queues[Station.DOUGH].push(
@@ -229,8 +241,16 @@ export class PizzasService {
         }));
     }
 
-    getAllBatchesInProgress(): { [key: string]: Batch } {
-        return { ...this.batchesInProgress }; // copy the object to avoid mutating it (pure function)
+    getAllBatchesInProgress(): { [key: string]: object } {
+        const inStationInfo = { ...this.inStationInfo };
+        for (const station in inStationInfo) {
+            inStationInfo[station] = Array.from(inStationInfo[station]);
+        }
+
+        return {
+            queues: { ...this.queues },
+            inStationInfo: inStationInfo,
+        };
     }
 
     async saveBatch(batch: Batch): Promise<Batch> {

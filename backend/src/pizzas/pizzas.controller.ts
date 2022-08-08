@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Batch } from './batch.model';
 import { PizzasService } from './pizzas.service';
 
 @Controller('pizzas')
@@ -14,5 +15,10 @@ export class PizzasController {
     @Get('batches')
     getAllBatches(): Promise<object[]> {
         return this.pizzasService.getAllBatches();
+    }
+
+    @Get('active')
+    getActiveBatches(): { [key: string]: object } {
+        return this.pizzasService.getAllBatchesInProgress();
     }
 }
