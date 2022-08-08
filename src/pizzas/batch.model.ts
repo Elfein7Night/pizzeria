@@ -1,11 +1,11 @@
-import { Pizza } from './pizza.model';
+import { Pizza, PizzaSchema } from './pizza.model';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 export type BatchDocument = Batch & Document;
 @Schema()
 export class Batch {
-    @Prop()
+    @Prop([PizzaSchema])
     public completed?: Pizza[];
 
     @Prop()

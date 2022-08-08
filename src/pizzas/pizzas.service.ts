@@ -5,7 +5,6 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { v1 as uuidv1 } from 'uuid';
 import {
     BATCH_COMPLETE,
-    getToppingsTimeMS,
     MAX_ACTIVE_FOR_STATION,
     NEXT_STATION,
     Station,
@@ -20,7 +19,7 @@ import { Model } from 'mongoose';
 @Injectable()
 export class PizzasService {
     /**
-     * We use Event-driven design (EDD) to manage the different stations.
+     * We use Event-driven design (EDD) to manage the pipeline.
      * We could have used Promise Chaining or Promise Queues but EDD is much more efficient.
      * We could have also used some external State Machines libraries to implement the EDD but that's overkill for this size of project.
      * (although we did some small version of state machine with the transitions between the stations).
@@ -72,47 +71,67 @@ export class PizzasService {
 
     @OnEvent(TASK_IN_QUEUE)
     onTaskInQueue(station: Station) {
-        if (this.busyCount[station] >= MAX_ACTIVE_FOR_STATION[station]) return;
+        if (
+            this.busyCount[station] >= MAX_ACTIVE_FOR_STATION[station] ||
+            this.queues[station].length == 0
+        ) {
+            return;
+        }
 
         this.busyCount[station]++;
-        let helpingHands = 0;
-
-        // get a task from this stage's queue
-        const pizza = this.queues[station].shift();
-        console.log(
-            `${new Date()} : pizza #${pizza.id.slice(
-                4,
-                8,
-            )} is in the ${station} station`,
-        );
-
         let station_time = TIME_FOR_STATION_MS[station];
-        if (station === Station.TOPPING) {
-            let remainingToppings = pizza.toppings.length;
-            while (
-                remainingToppings > 2 &&
-                this.busyCount[station] < MAX_ACTIVE_FOR_STATION[station]
-            ) {
-                this.busyCount[station]++;
-                helpingHands++;
-                remainingToppings -= 2;
+
+        if (station == Station.TOPPING) {
+            // no more toppings to put on the pizza
+            if (this.queues[station][0].pendingToppings.length == 0) {
+                this.busyCount[station]--;
+                this.emitTaskComplete(station, this.queues[station].shift());
+                return;
             }
-            station_time = getToppingsTimeMS(remainingToppings, helpingHands);
+
+            // a tricky part of the logic: each chef can handle 2 toppings at a time
+            station_time *= Math.min(
+                2,
+                this.queues[station][0].pendingToppings.splice(-2).length,
+            );
+
+            if (this.queues[station][0].pendingToppings.length != 0) {
+                // there are more toppigs left, call for help from other chefs
+                this.emitInQueue(station);
+            }
         }
+
+        const pizza =
+            station != Station.TOPPING
+                ? this.queues[station].shift()
+                : this.queues[station][0];
+
+        if (
+            station != Station.TOPPING ||
+            pizza.toppings.length == pizza.pendingToppings.length
+        ) {
+            console.log(
+                `${new Date()} : pizza #${
+                    pizza.id
+                } is in the ${station} station`,
+            );
+        }
+
         // schedule timeout for task completion, once it's done, emit `task complete` event
         setTimeout(() => {
-            this.busyCount[station] -= helpingHands + 1;
-            this.emitTaskComplete(station, pizza);
+            this.busyCount[station]--;
+            if (station != Station.TOPPING) {
+                this.emitTaskComplete(station, pizza);
+            } else {
+                this.emitInQueue(station); // didn't finish toppings, it is still in toppings queue
+            }
         }, station_time);
     }
 
     @OnEvent(TASK_COMPLETE)
     onTaskComplete(station: Station, pizza: Pizza) {
         console.log(
-            `${new Date()} : pizza #${pizza.id.slice(
-                4,
-                8,
-            )} left the ${station} station`,
+            `${new Date()} : pizza #${pizza.id} left the ${station} station`,
         );
 
         if (!(station in NEXT_STATION)) {
@@ -135,8 +154,9 @@ export class PizzasService {
     @OnEvent(BATCH_COMPLETE)
     onBatchComplete(batchId: string) {
         const doneTime = new Date();
-        console.log(`${doneTime} : Batch #${batchId.slice(4, 8)} is done`);
+        console.log(`${doneTime} : Batch #${batchId} is done`);
         this.batchesInProgress[batchId].endTime = doneTime;
+
         // print a report about the complete set of orders
         console.log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
         const timeTookForBatch = this.utilService.getTimeElapsedInSeconds(
@@ -144,21 +164,16 @@ export class PizzasService {
             this.batchesInProgress[batchId].endTime,
         );
         console.log(
-            `Batch #${batchId.slice(
-                4,
-                8,
-            )} took ${timeTookForBatch} seconds to complete`,
+            `Batch #${batchId} took ${timeTookForBatch} seconds to complete`,
         );
         this.batchesInProgress[batchId].completed.forEach((pizza: Pizza) => {
             const timeTookForPizza = this.utilService.getTimeElapsedInSeconds(
                 pizza.preparationStart,
                 pizza.preparationEnd,
             );
+
             console.log(
-                `\tpizza #${pizza.id.slice(
-                    4,
-                    8,
-                )} took ${timeTookForPizza} seconds to complete`,
+                `\tpizza #${pizza.id} took ${timeTookForPizza} seconds to complete`,
             );
             console.log(`\t\ttoppings : ${pizza.toppings.join(', ')}\n`);
         });
@@ -187,20 +202,35 @@ export class PizzasService {
             );
         }
 
-        const batchId = uuidv1();
+        const batchId = uuidv1().slice(4, 8);
         this.batchesInProgress[batchId] = new Batch(batchId, orders.length);
-        console.log(`${new Date()} : Batch #${batchId.slice(4, 8)} started`);
+        console.log(`${new Date()} : Batch #${batchId} started`);
 
         orders.forEach((order) => {
             this.queues[Station.DOUGH].push(
-                new Pizza(uuidv1(), batchId, order.toppings, new Date()),
+                new Pizza(
+                    uuidv1().slice(4, 8),
+                    batchId,
+                    order.toppings,
+                    new Date(),
+                ),
             );
             this.emitInQueue(Station.DOUGH);
         });
     }
 
-    async getAllBatches(): Promise<Batch[]> {
-        return this.batchModel.find().exec();
+    async getAllBatches(): Promise<object[]> {
+        const batches = await this.batchModel.find().exec();
+        return batches.map((batch: Batch) => ({
+            id: batch.id,
+            startTime: batch.startTime,
+            endTime: batch.endTime,
+            completed: batch.completed,
+        }));
+    }
+
+    getAllBatchesInProgress(): { [key: string]: Batch } {
+        return { ...this.batchesInProgress }; // copy the object to avoid mutating it (pure function)
     }
 
     async saveBatch(batch: Batch): Promise<Batch> {

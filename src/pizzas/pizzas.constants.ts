@@ -27,13 +27,6 @@ export const TIME_FOR_STATION_MS = {
     [Station.WAITER]: 5000,
 };
 
-export const getToppingsTimeMS = (
-    toppings_amount: number,
-    num_of_helping_hands: number,
-) =>
-    (toppings_amount + num_of_helping_hands * 2) *
-    TIME_FOR_STATION_MS[Station.TOPPING];
-
 export const TASK_IN_QUEUE = 'TASK_IN_QUEUE';
 export const TASK_COMPLETE = 'TASK_COMPLETE';
 export const BATCH_COMPLETE = 'BATCH_COMPLETE';

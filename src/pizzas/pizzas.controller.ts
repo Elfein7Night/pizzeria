@@ -12,7 +12,7 @@ export class PizzasController {
     }
 
     @Get('batches')
-    getAllBatches() {
+    getAllBatches(): Promise<object[]> {
         return this.pizzasService.getAllBatches();
     }
 }
