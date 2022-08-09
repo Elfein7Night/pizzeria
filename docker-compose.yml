@@ -18,7 +18,6 @@ services:
     restart: always
     build: ./backend
     ports:
-      - "80:8080"
       - "8080:8080"
     depends_on:
       - mongo
@@ -32,10 +31,13 @@ services:
     stdin_open: true
     ports:
       - "3000:3000"
+      - "80:3000"
     depends_on:
       - nest
     networks:
       - pizzeria
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 networks:
   pizzeria:

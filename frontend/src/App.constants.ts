@@ -1,4 +1,4 @@
-export const BATCH_SUBMITTING_URL = 'http://localhost:8080/pizzas/';
+export const BATCH_SUBMITTING_URL = 'http://host.docker.internal:8080/pizzas/';
 export const COMPLETE_BATCHES_URL = BATCH_SUBMITTING_URL + 'batches/';
 export const IN_PROGRESS_BATCHES_URL =  BATCH_SUBMITTING_URL + 'active/';
 
