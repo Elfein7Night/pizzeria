@@ -1,5 +1,6 @@
 import Button from "./Button";
 import { useLocation } from "react-router-dom";
+import { BTN_COLOR, BTN_COLOR_CRIT } from "../App.constants";
 
 type HeaderProps = {
     onClick: () => void;
@@ -17,7 +18,7 @@ export default function Header({ onClick, showingBatchForm: showingAddButton, ti
                 location.pathname === '/' &&
                 <
                     Button
-                    color={showingAddButton ? 'red' : 'green'}
+                    color={showingAddButton ? BTN_COLOR : BTN_COLOR_CRIT}
                     text={showingAddButton ? 'Cancel' : 'Add Order Batch'}
                     onClick={onClick}
                 />

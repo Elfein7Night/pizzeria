@@ -18,6 +18,7 @@ body {
   border: 1px solid steelblue;
   padding: 30px;
   border-radius: 5px;
+  background-color: #D8DEE9;
 }
 
 .header {
@@ -52,23 +53,6 @@ body {
 .btn-block {
   display: block;
   width: 100%;
-}
-
-.task {
-  background: #f4f4f4;
-  margin: 5px;
-  padding: 10px 20px;
-  cursor: pointer;
-}
-
-.task.reminder {
-  border-left: 5px solid green;
-}
-
-.task h3 {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 .add-form {
@@ -116,6 +100,25 @@ ul {
 }
 
 li {
-  list-style: outside;
-  margin-bottom: 10px;
+  list-style: decimal;
+}
+
+.scrollable-div {
+  background-color: #D8DEE9;
+  height: 100px;
+  width: 700px;
+  margin-left: 20px;
+  overflow-y: scroll;
+  text-align: left;
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.scrollable-div-long {
+  background-color: #D8DEE9;
+  max-height: 700px;
+  width: 700px;
+  margin-left: 20px;
+  overflow-y: scroll;
+  text-align: left;
 }

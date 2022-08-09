@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  mongo:
+    container_name: mongo
+    image: mongo
+    command: mongod --quiet --logpath /dev/null
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    restart: always
+    networks:
+      - pizzeria
+
+  nest:
+    container_name: nest
+    restart: always
+    build: ./backend
+    ports:
+      - "80:8080"
+      - "8080:8080"
+    depends_on:
+      - mongo
+    networks:
+      - pizzeria
+
+  react:
+    container_name: react
+    restart: always
+    build: ./frontend
+    stdin_open: true
+    ports:
+      - "3000:3000"
+    depends_on:
+      - nest
+    networks:
+      - pizzeria
+
+networks:
+  pizzeria:
+    driver: bridge
+
+volumes:
+  mongodata:
+    driver: local

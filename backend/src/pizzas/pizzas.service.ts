@@ -35,9 +35,6 @@ export class PizzasService {
         @InjectModel(Batch.name) private batchModel: Model<BatchDocument>,
     ) {}
 
-    // *************************************************************
-    // *********************** FIELDS ******************************
-    // *************************************************************
     private queues: { [key in Station]: Pizza[] } = {
         [Station.DOUGH]: [],
         [Station.TOPPING]: [],
@@ -87,7 +84,6 @@ export class PizzasService {
         }
 
         this.busyCount[station]++;
-        let station_time = TIME_FOR_STATION_MS[station];
 
         if (station == Station.TOPPING) {
             // no more toppings to put on the pizza
@@ -97,14 +93,13 @@ export class PizzasService {
                 return;
             }
 
-            // a tricky part of the logic: each chef can handle 2 toppings at a time
-            station_time *= Math.min(
-                2,
-                this.queues[station][0].pendingToppings.splice(-2).length,
-            );
+            // a tricky part of the logic: each chef can handle max 2 toppings at a time,
+            // but we don't want a chef to put 2 toppings if there are available chefs who can
+            // help (effectively cutting a time for 2 toppings in half).
+            this.queues[station][0].pendingToppings.splice(-1);
 
             if (this.queues[station][0].pendingToppings.length != 0) {
-                // there are more toppigs left, call for help from other chefs
+                // there are more toppings left, call for help from other chefs before starting putting the topping.
                 this.emitInQueue(station);
             }
         }
@@ -135,7 +130,7 @@ export class PizzasService {
             } else {
                 this.emitInQueue(station); // didn't finish toppings, it is still in toppings queue
             }
-        }, station_time);
+        }, TIME_FOR_STATION_MS[station]);
     }
 
     @OnEvent(TASK_COMPLETE)
@@ -189,12 +184,12 @@ export class PizzasService {
             );
             console.log(`\t\ttoppings : ${pizza.toppings.join(', ')}\n`);
         });
-        console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
 
         // save batch ('orders set report') to the database
         this.batchModel.create(this.batchesInProgress[batchId]).then(
             () => {
-                console.log(`Batch #${batchId} saved to database`);
+                console.log(`\nBatch #${batchId} saved to database`);
+                console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
                 delete this.batchesInProgress[batchId];
             },
             (err) => {

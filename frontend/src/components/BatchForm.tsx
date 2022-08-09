@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import Button from "./Button";
 import { useState } from "react";
 import './BatchForm.css';
-import { TOPPINGS } from "../App.constants";
+import { BTN_COLOR, TOPPINGS } from "../App.constants";
 
 export type Batch = { [toppings: string]: string[] }[]
 
@@ -11,7 +11,7 @@ type BatchFormProps = {
 }
 
 export default function BatchForm({ onSubmit }: BatchFormProps) {
-    const { register, handleSubmit, unregister } = useForm();
+    const { register, handleSubmit, unregister, setValue } = useForm();
 
     const [curBatch, setCurBatch] = useState<Batch>(
         []
@@ -24,37 +24,51 @@ export default function BatchForm({ onSubmit }: BatchFormProps) {
             }
         }
         setCurBatch([...curBatch, data]);
-        unregister('toppings');
+        unregister();
+        setValue('toppings', []);
     };
 
     return (
         <div>
-            <h4>Current Batch Orders:</h4>
-            <ol>
-                {
-                    curBatch.map((order, i) =>
-                        <li key={`li${i}`}>
-                            {order["toppings"].length ? order["toppings"].toString() : "order with no toppings"}
-                        </li>
-                    )
-                }
-            </ol>
+            {
+                curBatch.length ?
+                    <div>
+                        <h5 style={{marginLeft: '50px', marginBottom: '20px'}}>Current Orders Batch:</h5>
+                        <div className='scrollable-div'>
+                            <ol>
+                                {
+                                    curBatch.map((order, i) =>
+                                        <li key={`li${i}`}>
+                                            {order["toppings"].length ? 'Pizza with: ' + order["toppings"].join(", ") : "Plain pizza (no toppings)"}
+                                        </li>
+                                    )
+                                }
+                            </ol>
+                        </div>
+                    </div>
+                    : 'No pizza orders in the batch yet...'
+            }
+            <h6 style={{ textAlign: 'center', marginTop: '20px' }}>Choose toppings for a new pizza order:</h6>
             <form className="form" onSubmit={handleSubmit(onOrderAdd)}>
-                {TOPPINGS.map((topping, i) => {
-                    return (
-                        <label key={`label${i}`}>
-                            <input key = {`input${i}`}
-                                {...register("toppings")}
-                                type="checkbox"
-                                value={topping}
-                            />{" "}
-                            {topping}
-                        </label>
-                    );
-                })}
-                <input type="submit" />
+                {
+                    TOPPINGS.map((topping, i) => {
+                        return (
+                            <label key={`label${i}`}>
+                                <input key={topping}
+                                    {...register("toppings")}
+                                    type="checkbox"
+                                    value={topping}
+                                />
+                                {topping}
+                            </label>
+                        );
+                    })
+                }
+                <input type="submit" value="Add pizza to batch" />
             </form>
-            <Button color={"green"} text={"Order this batch from the restaurant"} onClick={() => onSubmit(curBatch)} />
+            <div style={{ textAlign: "center" }}>
+                <Button color={BTN_COLOR} text={"Send orders batch to the restaurant"} onClick={() => onSubmit(curBatch)} />
+            </div>
         </div>
     );
 }
