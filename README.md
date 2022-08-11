@@ -1,4 +1,5 @@
 # Pizza Assignment
+Full description and requirements are located in `Pizza assignment.pdf`.
 
 ## Demos:
 
@@ -6,9 +7,6 @@ https://user-images.githubusercontent.com/39451680/183568959-b0d3cefb-39af-40f2-
 
 
 https://user-images.githubusercontent.com/39451680/183568989-11cb8eb5-7722-4d4c-ac96-14b1f2959db5.mp4
-
-
-
 
 
 ## Installation:
