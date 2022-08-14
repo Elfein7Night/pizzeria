@@ -213,6 +213,9 @@ export class PizzasService {
         this.batchesInProgress[batchId] = new Batch(batchId, orders.length);
         console.log(`${new Date()} : Batch #${batchId} started...`);
 
+        // sort the orders (ascending) by the number of toppings - a necessary optimization
+        orders.sort((a, b) => a.toppings.length - b.toppings.length);
+
         orders.forEach((order) => {
             this.queues[Station.DOUGH].push(
                 new Pizza(
