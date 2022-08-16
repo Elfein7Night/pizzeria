@@ -1,5 +1,4 @@
 import { Controller, Post, Body, Get } from '@nestjs/common';
-import { Batch } from './batch.model';
 import { PizzasService } from './pizzas.service';
 
 @Controller('pizzas')

@@ -60,10 +60,9 @@ input[type="submit"]:disabled {
 input[type="button"]:active,
 input[type="submit"]:active {
     transition: 0.3s all;
-    transform: translateY(3px);
+    transform: scale(0.98);
     border: 1px solid transparent;
     opacity: 0.8;
-    transform: scale(0.98);
 }
 
 input:disabled {

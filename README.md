@@ -1,4 +1,4 @@
-# Pizza Assignment
+# Pizza Assignment [![CodeFactor](https://www.codefactor.io/repository/github/elfein7night/pizzeria/badge)](https://www.codefactor.io/repository/github/elfein7night/pizzeria)
 Full description and requirements are located in `Pizza assignment.pdf`.
 
 ## Demos:
